@@ -1,6 +1,7 @@
 #' @import purrr
 #' @import stats
 #' @importFrom magrittr %>%
+#' @importFrom utils "capture.output"
 #' @details
 #' Linear Regression with Little Bag of Bootstraps
 "_PACKAGE"
@@ -11,6 +12,22 @@
 utils::globalVariables(c("."))
 
 
+#' @title Linear regression with Bag of Little Bootstraps (BLB)
+#'
+#' @param formula an object of class "[formula]": a symbolic description of the model to be fitted.
+#' @param data a data frame containing the variables in the model
+#' @param m an integer specifying the number of rows (Default 10) the data will be sliced into.
+#' @param B an integer specifying the number of bootstraps (Default 5000) done within each sub-sample.
+#' @return
+#' blblm returns an object of class "blblm".
+#'
+#' Like object of class "lm", the generic accessor functions `coefficients`, `confint`, `sigma`, `predict` extract various useful features of the value returned by `blblm`.
+#' @export
+#'
+#' @examples
+#' library(blblm)
+#' fit <- blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100)
+#'
 #' @export
 blblm <- function(formula, data, m = 10, B = 5000) {
   data_list <- split_data(data, m)
@@ -49,7 +66,6 @@ lm1 <- function(X, y, n) {
   list(coef = blbcoef(fit), sigma = blbsigma(fit))
 }
 
-
 #' compute the coefficients from fit
 blbcoef <- function(fit) {
   coef(fit)
@@ -79,7 +95,7 @@ sigma.blblm <- function(object, confidence = FALSE, level = 0.95, ...) {
   est <- object$estimates
   sigma <- mean(map_dbl(est, ~ mean(map_dbl(., "sigma"))))
   if (confidence) {
-    alpha <- 1 - 0.95
+    alpha <- 1 - level
     limits <- est %>%
       map_mean(~ quantile(map_dbl(., "sigma"), c(alpha / 2, 1 - alpha / 2))) %>%
       set_names(NULL)
