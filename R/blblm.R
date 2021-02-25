@@ -1,9 +1,12 @@
 #' @import purrr
 #' @import stats
+#' @import furrr
+#' @import future
 #' @importFrom magrittr %>%
 #' @importFrom utils "capture.output"
 #' @details
 #' Linear Regression with Little Bag of Bootstraps
+#' @aliases blblm-package
 "_PACKAGE"
 
 
@@ -16,20 +19,46 @@ utils::globalVariables(c("."))
 #'
 #' @param formula an object of class "[formula]": a symbolic description of the model to be fitted.
 #' @param data a data frame containing the variables in the model
-#' @param m an integer specifying the number of rows (Default 10) the data will be sliced into.
+#' @param m an integer specifying the number of chunks (Default 10) the data will be sliced into.
 #' @param B an integer specifying the number of bootstraps (Default 5000) done within each sub-sample.
+#' @param parallel logical, use parallel (Default) or not.
 #' @return
 #' blblm returns an object of class "blblm".
 #'
 #' Like object of class "lm", the generic accessor functions `coefficients`, `confint`, `sigma`, `predict` extract various useful features of the value returned by `blblm`.
 #' @export
-#'
-#' @examples
-#' library(blblm)
-#' fit <- blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100)
-#'
-#' @export
-blblm <- function(formula, data, m = 10, B = 5000) {
+
+
+blblm <- function( formula, data, m = 10, B = 5000, parallel = TRUE ) {
+  data_list <- split_data( data, m )
+
+  ifelse( parallel,
+          plan( multisession ),
+          plan( sequential )
+  )
+
+  estimates <- future_map(
+    data_list,
+    ~ lm_each_subsample( formula = formula, data = ., n = nrow( data ), B = B ),
+    .options = furrr_options( seed = TRUE )
+  )
+
+  res <- list( estimates = estimates, formula = formula )
+  class( res ) <- "blblm"
+  invisible( res )
+
+}
+
+
+#' @title split data into m parts of approximated equal sizes.
+#' @param data a data frame containing the variables in the model.
+
+split_data <- function( data, m ) {
+  idx <- sample.int( m, nrow( data ), replace = TRUE )
+  data %>% split( idx )
+}
+
+blblm.old <- function(formula, data, m = 10, B = 5000) {
   data_list <- split_data(data, m)
   estimates <- map(
     data_list,
@@ -40,15 +69,8 @@ blblm <- function(formula, data, m = 10, B = 5000) {
 }
 
 
-#' split data into m parts of approximated equal sizes
-split_data <- function(data, m) {
-  idx <- sample.int(m, nrow(data), replace = TRUE)
-  data %>% split(idx)
-}
-
-
 #' compute the estimates
-lm_each_subsample <- function(formula, data, n, B) {
+lm_each_subsample <- function( formula, data, n, B ) {
   # drop the original closure of formula,
   # otherwise the formula will pick a wrong variable from the global scope.
   environment(formula) <- environment()

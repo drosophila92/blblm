@@ -4,16 +4,18 @@
 \alias{blblm}
 \title{Linear regression with Bag of Little Bootstraps (BLB)}
 \usage{
-blblm(formula, data, m = 10, B = 5000)
+blblm(formula, data, m = 10, B = 5000, parallel = TRUE)
 }
 \arguments{
 \item{formula}{an object of class "\link{formula}": a symbolic description of the model to be fitted.}
 
 \item{data}{a data frame containing the variables in the model}
 
-\item{m}{an integer specifying the number of rows (Default 10) the data will be sliced into.}
+\item{m}{an integer specifying the number of chunks (Default 10) the data will be sliced into.}
 
 \item{B}{an integer specifying the number of bootstraps (Default 5000) done within each sub-sample.}
+
+\item{parallel}{logical, use parallel (Default) or not.}
 }
 \value{
 blblm returns an object of class "blblm".
@@ -22,9 +24,4 @@ Like object of class "lm", the generic accessor functions \code{coefficients}, \
 }
 \description{
 Linear regression with Bag of Little Bootstraps (BLB)
-}
-\examples{
-library(blblm)
-fit <- blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100)
-
 }
