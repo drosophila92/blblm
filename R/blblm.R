@@ -7,6 +7,7 @@
 #' @details
 #' Linear Regression with Little Bag of Bootstraps
 #' @aliases blblm-package
+#'
 "_PACKAGE"
 
 
@@ -27,6 +28,10 @@ utils::globalVariables(c("."))
 #'
 #' Like object of class "lm", the generic accessor functions `coefficients`, `confint`, `sigma`, `predict` extract various useful features of the value returned by `blblm`.
 #' @export
+#' @examples
+#' data(mtcars)
+#' blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100)
+#' closeAllConnections()
 
 
 blblm <- function( formula, data, m = 10, B = 5000, parallel = TRUE ) {

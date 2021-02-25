@@ -25,3 +25,8 @@ Like object of class "lm", the generic accessor functions \code{coefficients}, \
 \description{
 Linear regression with Bag of Little Bootstraps (BLB)
 }
+\examples{
+data(mtcars)
+blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100)
+closeAllConnections()
+}
