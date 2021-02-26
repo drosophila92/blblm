@@ -8,7 +8,12 @@ split_data(data, m)
 }
 \arguments{
 \item{data}{a data frame containing the variables in the model.}
+
+\item{m}{an integer specifying the number of chunks the data will be sliced into.}
+}
+\value{
+a list of length m of sub-sampled data
 }
 \description{
-split data into m parts of approximated equal sizes.
+to be filled
 }

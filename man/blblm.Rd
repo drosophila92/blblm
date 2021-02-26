@@ -4,7 +4,7 @@
 \alias{blblm}
 \title{Linear regression with Bag of Little Bootstraps (BLB)}
 \usage{
-blblm(formula, data, m = 10, B = 5000, parallel = TRUE)
+blblm(formula, data, m = 10L, B = 5000L, parallel = TRUE)
 }
 \arguments{
 \item{formula}{an object of class "\link{formula}": a symbolic description of the model to be fitted.}
@@ -20,13 +20,13 @@ blblm(formula, data, m = 10, B = 5000, parallel = TRUE)
 \value{
 blblm returns an object of class "blblm".
 
-Like object of class "lm", the generic accessor functions \code{coefficients}, \code{confint}, \code{sigma}, \code{predict} extract various useful features of the value returned by \code{blblm}.
+Like object of class "lm", the generic accessor functions \verb{[coefficients]}, \verb{[confint]}, \verb{[sigma]}, \verb{[predict]} extract various useful features of the value returned by \code{blblm}.
 }
 \description{
-Linear regression with Bag of Little Bootstraps (BLB)
+to be filled
 }
 \examples{
 data(mtcars)
 blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100)
-closeAllConnections()
+closeAllConnections() # close all connections to clean up
 }

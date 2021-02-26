@@ -6,6 +6,12 @@
 \usage{
 blbsigma(fit)
 }
+\arguments{
+\item{fit}{to be filled}
+}
+\value{
+to be filled
+}
 \description{
-compute sigma from fit
+to be filled
 }

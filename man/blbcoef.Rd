@@ -6,6 +6,12 @@
 \usage{
 blbcoef(fit)
 }
+\arguments{
+\item{fit}{to be filled}
+}
+\value{
+to be filled
+}
 \description{
-compute the coefficients from fit
+to be filled
 }

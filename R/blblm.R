@@ -17,7 +17,7 @@ utils::globalVariables(c("."))
 
 
 #' @title Linear regression with Bag of Little Bootstraps (BLB)
-#'
+#' @description to be filled
 #' @param formula an object of class "[formula]": a symbolic description of the model to be fitted.
 #' @param data a data frame containing the variables in the model
 #' @param m an integer specifying the number of chunks (Default 10) the data will be sliced into.
@@ -26,21 +26,20 @@ utils::globalVariables(c("."))
 #' @return
 #' blblm returns an object of class "blblm".
 #'
-#' Like object of class "lm", the generic accessor functions `coefficients`, `confint`, `sigma`, `predict` extract various useful features of the value returned by `blblm`.
+#' Like object of class "lm", the generic accessor functions `[coefficients]`, `[confint]`, `[sigma]`, `[predict]` extract various useful features of the value returned by `blblm`.
 #' @export
 #' @examples
 #' data(mtcars)
 #' blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100)
-#' closeAllConnections()
+#' closeAllConnections() # close all connections to clean up
 
-
-blblm <- function( formula, data, m = 10, B = 5000, parallel = TRUE ) {
+blblm <- function( formula, data, m = 10L, B = 5000L, parallel = TRUE ) {
   data_list <- split_data( data, m )
 
-  ifelse( parallel,
-          plan( multisession ),
-          plan( sequential )
-  )
+  if( parallel )
+    plan( multisession, workers = min( m , availableCores() ) ) # specify with the number of cores (devtools::check() will only use 2 cores by default)
+  else
+    plan( sequential )
 
   estimates <- future_map(
     data_list,
@@ -56,7 +55,10 @@ blblm <- function( formula, data, m = 10, B = 5000, parallel = TRUE ) {
 
 
 #' @title split data into m parts of approximated equal sizes.
+#' @description to be filled
 #' @param data a data frame containing the variables in the model.
+#' @param m an integer specifying the number of chunks the data will be sliced into.
+#' @return a list of length m of sub-sampled data
 
 split_data <- function( data, m ) {
   idx <- sample.int( m, nrow( data ), replace = TRUE )
@@ -73,8 +75,14 @@ blblm.old <- function(formula, data, m = 10, B = 5000) {
   invisible(res)
 }
 
+#' @title compute bootstrap estimates in sub-samples.
+#' @description compute the bootstrapped estimates of linear model parameters (regression coefficients \eqn{\beta} and common standard deviation \eqn{\sigma} in error terms).
+#' @param formula a data frame containing the variables in the model.
+#' @param data a data frame (after from sub-sampled from original data) containing the variables in the model.
+#' @param n an integer specifying the number of rows from original data.
+#' @param B an integer specifying the number of bootstraps done within each sub-sample.
+#' @return a list of length m of sub-sampled data
 
-#' compute the estimates
 lm_each_subsample <- function( formula, data, n, B ) {
   # drop the original closure of formula,
   # otherwise the formula will pick a wrong variable from the global scope.
@@ -86,20 +94,34 @@ lm_each_subsample <- function( formula, data, n, B ) {
 }
 
 
-#' compute the regression estimates for a blb dataset
+#' @title compute the regression estimates for a blb dataset
+#' @description to be filled
+#' @param X to be filled
+#' @param y to be filled
+#' @param n to be filled
+#' @return to be filled
+#'
 lm1 <- function(X, y, n) {
   freqs <- as.vector(rmultinom(1, n, rep(1, nrow(X))))
   fit <- lm.wfit(X, y, freqs)
   list(coef = blbcoef(fit), sigma = blbsigma(fit))
 }
 
-#' compute the coefficients from fit
+#' @title compute the coefficients from fit
+#' @description to be filled
+#' @param fit  to be filled
+#' @return to be filled
+
 blbcoef <- function(fit) {
   coef(fit)
 }
 
 
-#' compute sigma from fit
+#' @title compute sigma from fit
+#' @description to be filled
+#' @param fit  to be filled
+#' @return to be filled
+#'
 blbsigma <- function(fit) {
   p <- fit$rank
   e <- fit$residuals

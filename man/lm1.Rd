@@ -6,6 +6,16 @@
 \usage{
 lm1(X, y, n)
 }
+\arguments{
+\item{X}{to be filled}
+
+\item{y}{to be filled}
+
+\item{n}{to be filled}
+}
+\value{
+to be filled
+}
 \description{
-compute the regression estimates for a blb dataset
+to be filled
 }
