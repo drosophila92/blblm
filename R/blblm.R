@@ -64,7 +64,9 @@ split_data <- function( data, m ) {
   data %>% split( idx )
 }
 
-blblm.old <- function(formula, data, m = 10, B = 5000) {
+# legacy blblm function
+
+blblm.old <- function(formula, data, m = 10L, B = 5000L) {
   data_list <- split_data(data, m)
   estimates <- map(
     data_list,
