@@ -4,10 +4,10 @@
 \alias{blblm}
 \title{Linear regression with Bag of Little Bootstraps (BLB)}
 \usage{
-blblm(formula, data, m = 10L, B = 5000L, parallel = TRUE)
+blblm(formula, data, m = 10L, B = 5000L, parallel = availableCores())
 }
 \arguments{
-\item{formula}{an object of class "\link{formula}": a symbolic description of the model to be fitted.}
+\item{formula}{an object of class \link{formula}: a symbolic description of the model to be fitted.}
 
 \item{data}{a data frame containing the variables in the model}
 
@@ -15,12 +15,12 @@ blblm(formula, data, m = 10L, B = 5000L, parallel = TRUE)
 
 \item{B}{an integer specifying the number of bootstraps (Default 5000) done within each sub-sample.}
 
-\item{parallel}{logical, use parallel (Default) or not.}
+\item{parallel}{an integer specifying number of parallel processes (Default \code{\link[future:re-exports]{future::availableCores()}}) used. Set parallel = 1L to turn off.}
 }
 \value{
 blblm returns an object of class "blblm".
 
-Like object of class "lm", the generic accessor functions \verb{[coefficients]}, \verb{[confint]}, \verb{[sigma]}, \verb{[predict]} extract various useful features of the value returned by \code{blblm}.
+Like object of class "lm", the generic accessor functions \link{coef}, \link{confint}, \link{sigma}, \link{predict} extract various useful features of the value returned by \code{blblm}.
 }
 \description{
 to be filled

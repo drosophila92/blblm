@@ -18,26 +18,29 @@ utils::globalVariables(c("."))
 
 #' @title Linear regression with Bag of Little Bootstraps (BLB)
 #' @description to be filled
-#' @param formula an object of class "[formula]": a symbolic description of the model to be fitted.
+#' @param formula an object of class [formula]: a symbolic description of the model to be fitted.
 #' @param data a data frame containing the variables in the model
 #' @param m an integer specifying the number of chunks (Default 10) the data will be sliced into.
 #' @param B an integer specifying the number of bootstraps (Default 5000) done within each sub-sample.
-#' @param parallel logical, use parallel (Default) or not.
+#' @param parallel an integer specifying number of parallel processes (Default [future::availableCores()]) used. Set parallel = 1L to turn off.
 #' @return
 #' blblm returns an object of class "blblm".
 #'
-#' Like object of class "lm", the generic accessor functions `[coefficients]`, `[confint]`, `[sigma]`, `[predict]` extract various useful features of the value returned by `blblm`.
+#' Like object of class "lm", the generic accessor functions [coef], [confint], [sigma], [predict] extract various useful features of the value returned by `blblm`.
 #' @export
 #' @examples
 #' data(mtcars)
 #' blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100)
 #' closeAllConnections() # close all connections to clean up
 
-blblm <- function( formula, data, m = 10L, B = 5000L, parallel = TRUE ) {
+
+# blb <- function( ..., method = c("lm", "rf"(too hard), "logistic"(maybe?) ) )?
+
+blblm <- function( formula, data, m = 10L, B = 5000L, parallel = availableCores() ) {
   data_list <- split_data( data, m )
 
-  if( parallel )
-    plan( multisession, workers = min( m , availableCores() ) ) # specify with the number of cores (devtools::check() will only use 2 cores by default)
+  if( parallel > 1L )
+    plan( multisession, workers = min( m , parallel, availableCores() ) ) # specify with the number of cores (devtools::check() will only use 2 cores by default)
   else
     plan( sequential )
 
@@ -83,14 +86,18 @@ blblm.old <- function(formula, data, m = 10, B = 5000) {
 #' @param B an integer specifying the number of bootstraps done within each sub-sample.
 #' @return a list of length m of sub-sampled data
 
+# functions that are not exported don't need documentations. As users cannot
+# access them directly, it is a better practice to not confuse them by providing
+# documentations to them by `?function()`
+
 lm_each_subsample <- function( formula, data, n, B ) {
   # drop the original closure of formula,
   # otherwise the formula will pick a wrong variable from the global scope.
-  environment(formula) <- environment()
-  m <- model.frame(formula, data)
-  X <- model.matrix(formula, m)
-  y <- model.response(m)
-  replicate(B, lm1(X, y, n), simplify = FALSE)
+  environment( formula ) <- environment()
+  m <- model.frame( formula, data )
+  X <- model.matrix( formula, m )
+  y <- model.response( m )
+  replicate( B, lm1( X, y, n ), simplify = FALSE )
 }
 
 
@@ -100,10 +107,17 @@ lm_each_subsample <- function( formula, data, n, B ) {
 #' @param y to be filled
 #' @param n to be filled
 #' @return to be filled
-#'
+
+# functions that are not exported don't need documentations. As users cannot
+# access them directly, it is a better practice to not confuse them by providing
+# documentations to them by `?function()`
+
+
 lm1 <- function(X, y, n) {
   freqs <- as.vector(rmultinom(1, n, rep(1, nrow(X))))
-  fit <- lm.wfit(X, y, freqs)
+  fit <- lm.wfit(X, y, freqs) # could improve the lm.wfit by Rcpp
+  # make fake X, y, freqs data
+  # debugonce lm.wfit, see which parts get evaluated
   list(coef = blbcoef(fit), sigma = blbsigma(fit))
 }
 
@@ -111,6 +125,10 @@ lm1 <- function(X, y, n) {
 #' @description to be filled
 #' @param fit  to be filled
 #' @return to be filled
+
+# functions that are not exported don't need documentations. As users cannot
+# access them directly, it is a better practice to not confuse them by providing
+# documentations to them by `?function()`
 
 blbcoef <- function(fit) {
   coef(fit)
@@ -121,31 +139,49 @@ blbcoef <- function(fit) {
 #' @description to be filled
 #' @param fit  to be filled
 #' @return to be filled
-#'
+
+# functions that are not exported don't need documentations. As users cannot
+# access them directly, it is a better practice to not confuse them by providing
+# documentations to them by `?function()`
+
 blbsigma <- function(fit) {
   p <- fit$rank
   e <- fit$residuals
   w <- fit$weights
+  ## could be?? improved by Rcpp?
   sqrt(sum(w * (e^2)) / (sum(w) - p))
 }
 
 
-#' @export
+
+#' @title to be filled
+#' @description to be filled
+#' @param x  to be filled
+#' @param ... to be filled
+#' @return to be filled
 #' @method print blblm
+#' @export
 print.blblm <- function(x, ...) {
   cat("blblm model:", capture.output(x$formula))
   cat("\n")
 }
 
 
-#' @export
+#' @title to be filled
+#' @description to be filled
+#' @param object  to be filled
+#' @param confidence to be filled
+#' @param level to be filled
+#' @param ... to be filled
+#' @return to be filled
 #' @method sigma blblm
+#' @export
 sigma.blblm <- function(object, confidence = FALSE, level = 0.95, ...) {
   est <- object$estimates
-  sigma <- mean(map_dbl(est, ~ mean(map_dbl(., "sigma"))))
+  sigma <- mean(map_dbl(est, ~ mean(map_dbl(., "sigma")))) # use map_mean
   if (confidence) {
     alpha <- 1 - level
-    limits <- est %>%
+    limits <- est %>% # use future maps
       map_mean(~ quantile(map_dbl(., "sigma"), c(alpha / 2, 1 - alpha / 2))) %>%
       set_names(NULL)
     return(c(sigma = sigma, lwr = limits[1], upr = limits[2]))
@@ -153,26 +189,42 @@ sigma.blblm <- function(object, confidence = FALSE, level = 0.95, ...) {
     return(sigma)
   }
 }
-
-#' @export
+#' @title to be filled
+#' @description to be filled
+#' @param object  to be filled
+#' @param ... to be filled
+#' @return to be filled
 #' @method coef blblm
+#' @export
+
 coef.blblm <- function(object, ...) {
   est <- object$estimates
   map_mean(est, ~ map_cbind(., "coef") %>% rowMeans())
 }
 
-
-#' @export
+#' @title to be filled
+#' @description to be filled
+#' @param object  to be filled
+#' @param parm to be filled
+#' @param level to be filled
+#' @param ... to be filled
+#' @return to be filled
 #' @method confint blblm
+#' @export
+
 confint.blblm <- function(object, parm = NULL, level = 0.95, ...) {
   if (is.null(parm)) {
     parm <- attr(terms(object$formula), "term.labels")
   }
   alpha <- 1 - level
   est <- object$estimates
+  # plan something
   out <- map_rbind(parm, function(p) {
+    # use future map for map_mean
     map_mean(est, ~ map_dbl(., list("coef", p)) %>% quantile(c(alpha / 2, 1 - alpha / 2)))
+
   })
+  # stop clusters
   if (is.vector(out)) {
     out <- as.matrix(t(out))
   }
@@ -180,8 +232,17 @@ confint.blblm <- function(object, parm = NULL, level = 0.95, ...) {
   out
 }
 
-#' @export
+#' @title to be filled
+#' @description to be filled
+#' @param object  to be filled
+#' @param new_data to be filled
+#' @param confidence to be filled
+#' @param level to be filled
+#' @param ... to be filled
+#' @return to be filled
 #' @method predict blblm
+#' @export
+
 predict.blblm <- function(object, new_data, confidence = FALSE, level = 0.95, ...) {
   est <- object$estimates
   X <- model.matrix(reformulate(attr(terms(object$formula), "term.labels")), new_data)
