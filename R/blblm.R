@@ -57,11 +57,7 @@ blblm <- function( formula, data, m = 10L, B = 5000L, parallel = availableCores(
 }
 
 
-#' @title split data into m parts of approximated equal sizes.
-#' @description to be filled
-#' @param data a data frame containing the variables in the model.
-#' @param m an integer specifying the number of chunks the data will be sliced into.
-#' @return a list of length m of sub-sampled data
+# split data into m parts of approximated equal sizes.
 
 split_data <- function( data, m ) {
   idx <- sample.int( m, nrow( data ), replace = TRUE )
@@ -78,17 +74,7 @@ blblm.old <- function(formula, data, m = 10, B = 5000) {
   invisible(res)
 }
 
-#' @title compute bootstrap estimates in sub-samples.
-#' @description compute the bootstrapped estimates of linear model parameters (regression coefficients \eqn{\beta} and common standard deviation \eqn{\sigma} in error terms).
-#' @param formula a data frame containing the variables in the model.
-#' @param data a data frame (after from sub-sampled from original data) containing the variables in the model.
-#' @param n an integer specifying the number of rows from original data.
-#' @param B an integer specifying the number of bootstraps done within each sub-sample.
-#' @return a list of length m of sub-sampled data
-
-# functions that are not exported don't need documentations. As users cannot
-# access them directly, it is a better practice to not confuse them by providing
-# documentations to them by `?function()`
+# compute bootstrap estimates in sub-samples.
 
 lm_each_subsample <- function( formula, data, n, B ) {
   # drop the original closure of formula,
@@ -101,17 +87,7 @@ lm_each_subsample <- function( formula, data, n, B ) {
 }
 
 
-#' @title compute the regression estimates for a blb dataset
-#' @description to be filled
-#' @param X to be filled
-#' @param y to be filled
-#' @param n to be filled
-#' @return to be filled
-
-# functions that are not exported don't need documentations. As users cannot
-# access them directly, it is a better practice to not confuse them by providing
-# documentations to them by `?function()`
-
+# compute the regression estimates for a blb dataset
 
 lm1 <- function(X, y, n) {
   freqs <- as.vector(rmultinom(1, n, rep(1, nrow(X))))
@@ -121,28 +97,14 @@ lm1 <- function(X, y, n) {
   list(coef = blbcoef(fit), sigma = blbsigma(fit))
 }
 
-#' @title compute the coefficients from fit
-#' @description to be filled
-#' @param fit  to be filled
-#' @return to be filled
-
-# functions that are not exported don't need documentations. As users cannot
-# access them directly, it is a better practice to not confuse them by providing
-# documentations to them by `?function()`
+# compute the coefficients from fit
 
 blbcoef <- function(fit) {
   coef(fit)
 }
 
 
-#' @title compute sigma from fit
-#' @description to be filled
-#' @param fit  to be filled
-#' @return to be filled
-
-# functions that are not exported don't need documentations. As users cannot
-# access them directly, it is a better practice to not confuse them by providing
-# documentations to them by `?function()`
+# compute sigma from fit
 
 blbsigma <- function(fit) {
   p <- fit$rank
@@ -153,7 +115,6 @@ blbsigma <- function(fit) {
 }
 
 
-
 #' @title to be filled
 #' @description to be filled
 #' @param x  to be filled
@@ -161,6 +122,7 @@ blbsigma <- function(fit) {
 #' @return to be filled
 #' @method print blblm
 #' @export
+
 print.blblm <- function(x, ...) {
   cat("blblm model:", capture.output(x$formula))
   cat("\n")
@@ -176,6 +138,7 @@ print.blblm <- function(x, ...) {
 #' @return to be filled
 #' @method sigma blblm
 #' @export
+
 sigma.blblm <- function(object, confidence = FALSE, level = 0.95, ...) {
   est <- object$estimates
   sigma <- mean(map_dbl(est, ~ mean(map_dbl(., "sigma")))) # use map_mean
