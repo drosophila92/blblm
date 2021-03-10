@@ -17,14 +17,11 @@ using namespace Rcpp;
 Rcpp::List fastwLm(const arma::mat& X, const arma::colvec& y, const arma::colvec& w) {
   int n = X.n_rows, k = X.n_cols;
 
-  arma::mat weight = arma::diagmat( arma::sqrt(w) ); // generate weight matrix
-  arma::mat weight_ = arma::diagmat( arma::sqrt(1/w) ); // generate weight matrix
-  arma::mat new_X = weight * X; // for loop
-  arma::mat new_y = weight * y; // vector product
+  arma::mat new_X = arma::diagmat( arma::sqrt(w) ) * X; // for loop
+  arma::mat new_y = arma::sqrt(w) % y; // vector product
 
   arma::colvec coef = arma::solve(new_X, new_y);    // fit model new_y ~ new_X
-  arma::colvec res  = weight_ * (new_y - new_X * coef);
-  //arma::colvec res  = weight_ * (new_y - new_X * coef);         // residuals
+  arma::colvec res  = (new_y - new_X * coef) / arma::sqrt(w);
 
 
   // type conversion
@@ -32,6 +29,7 @@ Rcpp::List fastwLm(const arma::mat& X, const arma::colvec& y, const arma::colvec
   return List::create(Named("coefficients") = NumericVector(coef.begin(),coef.end()),
                       Named("residuals") = NumericVector(res.begin(),res.end()),
                       Named("rank")  = k,
+                      Named("df.residual") = n-k,
                       Named("weights") = NumericVector(w.begin(),w.end()));
 }
 

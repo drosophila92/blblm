@@ -17,3 +17,51 @@ fastwLm <- function(X, y, w) {
     .Call('_blblm_fastwLm', PACKAGE = 'blblm', X, y, w)
 }
 
+#' @useDynLib blblm
+#' @importFrom Rcpp sourceCpp
+NULL
+
+fastwLm1 <- function(X, y, w) {
+    .Call('_blblm_fastwLm1', PACKAGE = 'blblm', X, y, w)
+}
+
+#' @useDynLib blblm
+#' @importFrom Rcpp sourceCpp
+NULL
+
+fastwLm2 <- function(X, y, w) {
+    .Call('_blblm_fastwLm2', PACKAGE = 'blblm', X, y, w)
+}
+
+#' @useDynLib blblm
+#' @importFrom Rcpp sourceCpp
+NULL
+
+fastwLm3 <- function(X, y, w) {
+    .Call('_blblm_fastwLm3', PACKAGE = 'blblm', X, y, w)
+}
+
+#' @useDynLib blblm
+#' @importFrom Rcpp sourceCpp
+NULL
+
+fastwLm4 <- function(X, y, w) {
+    .Call('_blblm_fastwLm4', PACKAGE = 'blblm', X, y, w)
+}
+
+#' @useDynLib blblm
+#' @importFrom Rcpp sourceCpp
+NULL
+
+fastwLm5 <- function(X, y, w) {
+    .Call('_blblm_fastwLm5', PACKAGE = 'blblm', X, y, w)
+}
+
+#' @useDynLib blblm
+#' @importFrom Rcpp sourceCpp
+NULL
+
+fastwLm6 <- function(X, y, w) {
+    .Call('_blblm_fastwLm6', PACKAGE = 'blblm', X, y, w)
+}
+
