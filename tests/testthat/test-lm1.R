@@ -1,12 +1,12 @@
 test_that("lm1 works", {
-  n <- nrow( mtcars )
+  n <- 1000L
   m <- model.frame( mpg ~ wt * hp, mtcars )
   X <- model.matrix( mpg ~ wt * hp, mtcars )
   y <- model.response( m )
 
   set.seed(141)
-  freqs <- as.vector( rmultinom( 1, n, rep( 1, nrow(X) ) ) )
-  fit <- lm.wfit(X, y, freqs)
+  w <- as.vector( rmultinom( 1, n, rep( 1, nrow(X) ) ) )
+  fit <- lm.wfit(X, y, w)
   beta <- fit$coefficients
 
   p <- fit$rank
@@ -15,10 +15,15 @@ test_that("lm1 works", {
   sigma <- sqrt( sum( w * ( e^2 ) ) / ( sum(w) - p ) )
 
   set.seed(141)
-  expect_identical( lm1( X, y, n )$coef,  beta )
-
+  fit.a <- lm1( X, y, n, use.legacy = TRUE )
   set.seed(141)
-  expect_identical( lm1( X, y, n )$sigma,  sigma )
+  fit.b <- lm1( X, y, n, use.legacy = FALSE )
+
+  expect_equal( fit.a$coef,  beta )
+  expect_equal( fit.a$sigma,  sigma )
+
+  expect_equal( fit.b$coef,  beta )
+  expect_equal( fit.b$sigma,  sigma )
 
 
 })

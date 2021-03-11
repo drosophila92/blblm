@@ -3,7 +3,7 @@
 using namespace Rcpp;
 
 //' @title An Rcpp function to quickly perform weighted linear regression
-//' @name fastwLm
+//' @name fastwLm_impl
 //'
 //' @param x design matrix
 //' @param y numeric vector of response variables
@@ -14,7 +14,7 @@ using namespace Rcpp;
 //' @importFrom Rcpp sourceCpp
 
 // [[Rcpp::export]]
-Rcpp::List fastwLm(const arma::mat& X, const arma::colvec& y, const arma::colvec& w) {
+Rcpp::List fastwLm_impl(const arma::mat& X, const arma::colvec& y, const arma::colvec& w) {
   int n = X.n_rows, k = X.n_cols;
 
   arma::mat new_X = arma::diagmat( arma::sqrt(w) ) * X; // for loop

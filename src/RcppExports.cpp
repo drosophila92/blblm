@@ -6,16 +6,16 @@
 
 using namespace Rcpp;
 
-// fastwLm
-Rcpp::List fastwLm(const arma::mat& X, const arma::colvec& y, const arma::colvec& w);
-RcppExport SEXP _blblm_fastwLm(SEXP XSEXP, SEXP ySEXP, SEXP wSEXP) {
+// fastwLm_impl
+Rcpp::List fastwLm_impl(const arma::mat& X, const arma::colvec& y, const arma::colvec& w);
+RcppExport SEXP _blblm_fastwLm_impl(SEXP XSEXP, SEXP ySEXP, SEXP wSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
     Rcpp::traits::input_parameter< const arma::colvec& >::type y(ySEXP);
     Rcpp::traits::input_parameter< const arma::colvec& >::type w(wSEXP);
-    rcpp_result_gen = Rcpp::wrap(fastwLm(X, y, w));
+    rcpp_result_gen = Rcpp::wrap(fastwLm_impl(X, y, w));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -99,7 +99,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_blblm_fastwLm", (DL_FUNC) &_blblm_fastwLm, 3},
+    {"_blblm_fastwLm_impl", (DL_FUNC) &_blblm_fastwLm_impl, 3},
     {"_blblm_fastwLm1", (DL_FUNC) &_blblm_fastwLm1, 3},
     {"_blblm_fastwLm2", (DL_FUNC) &_blblm_fastwLm2, 3},
     {"_blblm_fastwLm3", (DL_FUNC) &_blblm_fastwLm3, 3},

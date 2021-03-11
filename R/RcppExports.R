@@ -2,7 +2,7 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #' @title An Rcpp function to quickly perform weighted linear regression
-#' @name fastwLm
+#' @name fastwLm_impl
 #'
 #' @param x design matrix
 #' @param y numeric vector of response variables
@@ -13,8 +13,8 @@
 #' @importFrom Rcpp sourceCpp
 NULL
 
-fastwLm <- function(X, y, w) {
-    .Call('_blblm_fastwLm', PACKAGE = 'blblm', X, y, w)
+fastwLm_impl <- function(X, y, w) {
+    .Call('_blblm_fastwLm_impl', PACKAGE = 'blblm', X, y, w)
 }
 
 #' @useDynLib blblm
