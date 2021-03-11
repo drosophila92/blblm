@@ -78,25 +78,28 @@ blblm.old <- function(formula, data, m = 10L, B = 5000L) {
 
 # compute bootstrap estimates in sub-samples.
 
-lm_each_subsample <- function( formula, data, n, B ) {
+lm_each_subsample <- function( formula, data, n, B, use.legacy = FALSE ) {
   # drop the original closure of formula,
   # otherwise the formula will pick a wrong variable from the global scope.
   environment( formula ) <- environment()
   m <- model.frame( formula, data )
   X <- model.matrix( formula, m )
   y <- model.response( m )
-  replicate( B, lm1( X, y, n ), simplify = FALSE )
+  replicate( B, lm1( X, y, n, use.legacy = use.legacy ), simplify = FALSE )
 }
 
 
 # compute the regression estimates for a blb dataset
 
-lm1 <- function(X, y, n) {
+lm1 <- function(X, y, n, use.legacy = FALSE) {
   freqs <- as.vector(rmultinom(1, n, rep(1, nrow(X))))
-  fit <- lm.wfit(X, y, freqs) # could improve the lm.wfit by Rcpp
-  # make fake X, y, freqs data
-  # debugonce lm.wfit, see which parts get evaluated
-  list(coef = blbcoef(fit), sigma = blbsigma(fit))
+  if( use.legacy )
+    fit <- lm.wfit( X, y, freqs )
+  else
+    fit <- fastwLm( X, y, freqs )
+
+  list( coef = blbcoef(fit), sigma = blbsigma(fit) )
+
 }
 
 # compute the coefficients from fit
