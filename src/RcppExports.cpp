@@ -19,93 +19,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// fastwLm1
-Rcpp::List fastwLm1(const arma::mat& X, const arma::colvec& y, const arma::colvec& w);
-RcppExport SEXP _blblm_fastwLm1(SEXP XSEXP, SEXP ySEXP, SEXP wSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< const arma::colvec& >::type y(ySEXP);
-    Rcpp::traits::input_parameter< const arma::colvec& >::type w(wSEXP);
-    rcpp_result_gen = Rcpp::wrap(fastwLm1(X, y, w));
-    return rcpp_result_gen;
-END_RCPP
-}
-// fastwLm2
-Rcpp::List fastwLm2(const arma::mat& X, const arma::colvec& y, const arma::colvec& w);
-RcppExport SEXP _blblm_fastwLm2(SEXP XSEXP, SEXP ySEXP, SEXP wSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< const arma::colvec& >::type y(ySEXP);
-    Rcpp::traits::input_parameter< const arma::colvec& >::type w(wSEXP);
-    rcpp_result_gen = Rcpp::wrap(fastwLm2(X, y, w));
-    return rcpp_result_gen;
-END_RCPP
-}
-// fastwLm3
-Rcpp::List fastwLm3(const arma::mat& X, const arma::colvec& y, const arma::colvec& w);
-RcppExport SEXP _blblm_fastwLm3(SEXP XSEXP, SEXP ySEXP, SEXP wSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< const arma::colvec& >::type y(ySEXP);
-    Rcpp::traits::input_parameter< const arma::colvec& >::type w(wSEXP);
-    rcpp_result_gen = Rcpp::wrap(fastwLm3(X, y, w));
-    return rcpp_result_gen;
-END_RCPP
-}
-// fastwLm4
-Rcpp::List fastwLm4(const arma::mat& X, const arma::colvec& y, const arma::colvec& w);
-RcppExport SEXP _blblm_fastwLm4(SEXP XSEXP, SEXP ySEXP, SEXP wSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< const arma::colvec& >::type y(ySEXP);
-    Rcpp::traits::input_parameter< const arma::colvec& >::type w(wSEXP);
-    rcpp_result_gen = Rcpp::wrap(fastwLm4(X, y, w));
-    return rcpp_result_gen;
-END_RCPP
-}
-// fastwLm5
-Rcpp::List fastwLm5(const arma::mat& X, const arma::colvec& y, const arma::colvec& w);
-RcppExport SEXP _blblm_fastwLm5(SEXP XSEXP, SEXP ySEXP, SEXP wSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< const arma::colvec& >::type y(ySEXP);
-    Rcpp::traits::input_parameter< const arma::colvec& >::type w(wSEXP);
-    rcpp_result_gen = Rcpp::wrap(fastwLm5(X, y, w));
-    return rcpp_result_gen;
-END_RCPP
-}
-// fastwLm6
-Rcpp::List fastwLm6(const arma::mat& X, const arma::colvec& y, const arma::colvec& w);
-RcppExport SEXP _blblm_fastwLm6(SEXP XSEXP, SEXP ySEXP, SEXP wSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< const arma::colvec& >::type y(ySEXP);
-    Rcpp::traits::input_parameter< const arma::colvec& >::type w(wSEXP);
-    rcpp_result_gen = Rcpp::wrap(fastwLm6(X, y, w));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_blblm_fastwLm_impl", (DL_FUNC) &_blblm_fastwLm_impl, 3},
-    {"_blblm_fastwLm1", (DL_FUNC) &_blblm_fastwLm1, 3},
-    {"_blblm_fastwLm2", (DL_FUNC) &_blblm_fastwLm2, 3},
-    {"_blblm_fastwLm3", (DL_FUNC) &_blblm_fastwLm3, 3},
-    {"_blblm_fastwLm4", (DL_FUNC) &_blblm_fastwLm4, 3},
-    {"_blblm_fastwLm5", (DL_FUNC) &_blblm_fastwLm5, 3},
-    {"_blblm_fastwLm6", (DL_FUNC) &_blblm_fastwLm6, 3},
     {NULL, NULL, 0}
 };
 
