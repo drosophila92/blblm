@@ -2,22 +2,22 @@
 % Please edit documentation in R/blblm.R
 \name{confint.blblm}
 \alias{confint.blblm}
-\title{to be filled}
+\title{BLB confidence intervals of regression coefficients (\eqn{\beta} s)}
 \usage{
 \method{confint}{blblm}(object, parm = NULL, level = 0.95, ...)
 }
 \arguments{
-\item{object}{to be filled}
+\item{object}{a blblm object}
 
-\item{parm}{to be filled}
+\item{parm}{a charactor vector, names of parameters (i.e. regression coefficients) whose CI is to be calculated.}
 
-\item{level}{to be filled}
+\item{level}{numeric, a number range from (0,1) as the confidence level (Default: 0.95)}
 
-\item{...}{to be filled}
+\item{...}{additional arguments to be passed.}
 }
 \value{
-to be filled
+a matrix containing CI estimates on user-specified parameters (\code{parm}) with user-specified confidence level (\code{level})
 }
 \description{
-to be filled
+Calculate the BLB confidence intervals of regression coefficients (\eqn{\beta} s).
 }

@@ -2,24 +2,24 @@
 % Please edit documentation in R/blblm.R
 \name{predict.blblm}
 \alias{predict.blblm}
-\title{to be filled}
+\title{Predict method for BLB Model Fits}
 \usage{
 \method{predict}{blblm}(object, new_data, confidence = FALSE, level = 0.95, ...)
 }
 \arguments{
-\item{object}{to be filled}
+\item{object}{Object of class inheriting from "blblm"}
 
-\item{new_data}{to be filled}
+\item{new_data}{A data frame in which to look for variables with which to predict.}
 
-\item{confidence}{to be filled}
+\item{confidence}{logical, whether to show confidence interval around point prediction (Default: FALSE)}
 
-\item{level}{to be filled}
+\item{level}{numeric, a number range from (0,1) as the confidence level (Default: 0.95)}
 
-\item{...}{to be filled}
+\item{...}{additional arguments to be passed.}
 }
 \value{
-to be filled
+Point predictions for each new observation. If \code{confidence=TRUE}, also shows the confidence interval around the point point prediction.
 }
 \description{
-to be filled
+Predicted values based on BLB model object.
 }

@@ -22,6 +22,7 @@ utils::globalVariables(c("."))
 #' @param data a data frame containing the variables in the model
 #' @param m an integer specifying the number of chunks (Default 10) the data will be sliced into.
 #' @param B an integer specifying the number of bootstraps (Default 5000) done within each sub-sample.
+#' @param use.legacy an logical specifying whether use the legacy version of function (Default NA to use optimized one).
 #' @param parallel an integer specifying number of parallel processes (Default [future::availableCores()]) used. Set parallel = 1L to turn off.
 #' @return
 #' blblm returns an object of class "blblm".
@@ -36,19 +37,27 @@ utils::globalVariables(c("."))
 
 # blb <- function( ..., method = c("lm", "rf"(too hard), "logistic"(maybe?) ) )?
 
-blblm <- function( formula, data, m = 10L, B = 5000L, parallel = availableCores() ) {
+blblm <- function( formula, data, m = 10L, B = 5000L, use.legacy = NA, parallel = availableCores() ) {
   data_list <- split_data( data, m )
 
-  if( parallel > 1L )
-    plan( multisession, workers = min( m , parallel, availableCores() ) ) # specify with the number of cores (devtools::check() will only use 2 cores by default)
-  else
-    plan( sequential )
+  if( is.na( use.legacy ) )
+    use.legacy = prod( dim(data), m, B ) < 1e6
 
-  estimates <- future_map(
-    data_list,
-    ~ lm_each_subsample( formula = formula, data = ., n = nrow( data ), B = B ),
-    .options = furrr_options( seed = TRUE )
-  )
+
+  if( !use.legacy & parallel > 1L ){
+    plan( multisession, workers = min( m , parallel, availableCores() ) ) # specify with the number of cores (devtools::check() will only use 2 cores by default)
+    estimates <- future_map(
+      data_list,
+      ~ lm_each_subsample( formula = formula, data = ., n = nrow( data ), B = B ),
+      .options = furrr_options( seed = TRUE )
+    )
+  }
+
+  else{
+    estimates <- map(
+      data_list,
+      ~ lm_each_subsample(formula = formula, data = ., n = nrow( data ), B = B ) )
+  }
 
   res <- list( estimates = estimates, formula = formula )
   class( res ) <- "blblm"
@@ -62,18 +71,6 @@ blblm <- function( formula, data, m = 10L, B = 5000L, parallel = availableCores(
 split_data <- function( data, m ) {
   idx <- sample.int( m, nrow( data ), replace = TRUE )
   data %>% split( idx )
-}
-
-# legacy blblm function
-
-blblm.old <- function(formula, data, m = 10L, B = 5000L) {
-  data_list <- split_data(data, m)
-  estimates <- map(
-    data_list,
-    ~ lm_each_subsample(formula = formula, data = ., n = nrow(data), B = B))
-  res <- list(estimates = estimates, formula = formula)
-  class(res) <- "blblm"
-  invisible(res)
 }
 
 # compute bootstrap estimates in sub-samples.
@@ -120,27 +117,29 @@ blbsigma <- function(fit) {
 }
 
 
-#' @title to be filled
-#' @description to be filled
-#' @param x  to be filled
-#' @param ... to be filled
-#' @return to be filled
+#' @title Print the BLB linear regression model
+#' @description print out the model formula and regression coefficients of a blblm object to the console
+#' @param x  a blblm object
+#' @param ... additional arguments to be passed
 #' @method print blblm
 #' @export
 
 print.blblm <- function(x, ...) {
   cat("blblm model:", capture.output(x$formula))
   cat("\n")
+  cat("Coefficients:", capture.output(x$estimates))
+  cat("\n")
+
 }
 
 
-#' @title to be filled
-#' @description to be filled
-#' @param object  to be filled
-#' @param confidence to be filled
-#' @param level to be filled
-#' @param ... to be filled
-#' @return to be filled
+#' @title BLB estimator of error term standard deviation (\eqn{\sigma})
+#' @description Calculate the point estimation of error term standard deviation (\eqn{\sigma}), with the option to show the confidence internal by user specified confidence level.
+#' @param object  a blblm object returned by function `blblm`
+#' @param confidence logical, whether to show confidence interval around the point estimate (Default: FALSE)
+#' @param level numeric, a number range from (0,1) as the confidence level (Default: 0.95)
+#' @param ... additional arguments to be passed
+#' @return A single point estimate of error term standard deviation (\eqn{\sigma}). If `confidence=TRUE`, also shows the confidence interval around the point estimation.
 #' @method sigma blblm
 #' @export
 
@@ -157,11 +156,12 @@ sigma.blblm <- function(object, confidence = FALSE, level = 0.95, ...) {
     return(sigma)
   }
 }
-#' @title to be filled
-#' @description to be filled
-#' @param object  to be filled
-#' @param ... to be filled
-#' @return to be filled
+
+#' @title BLB estimator of regression coefficients (\eqn{\beta} s)
+#' @description Calculate the point estimation of regression coefficients (\eqn{\beta} s).
+#' @param object  a blblm object returned by function `blblm`
+#' @param ... additional arguments to be passed
+#' @return a dataframe of estimated regression coefficients.
 #' @method coef blblm
 #' @export
 
@@ -170,13 +170,13 @@ coef.blblm <- function(object, ...) {
   map_mean(est, ~ map_cbind(., "coef") %>% rowMeans())
 }
 
-#' @title to be filled
-#' @description to be filled
-#' @param object  to be filled
-#' @param parm to be filled
-#' @param level to be filled
-#' @param ... to be filled
-#' @return to be filled
+#' @title BLB confidence intervals of regression coefficients (\eqn{\beta} s)
+#' @description Calculate the BLB confidence intervals of regression coefficients (\eqn{\beta} s).
+#' @param object  a blblm object
+#' @param parm a charactor vector, names of parameters (i.e. regression coefficients) whose CI is to be calculated.
+#' @param level numeric, a number range from (0,1) as the confidence level (Default: 0.95)
+#' @param ... additional arguments to be passed.
+#' @return a matrix containing CI estimates on user-specified parameters (`parm`) with user-specified confidence level (`level`)
 #' @method confint blblm
 #' @export
 
@@ -200,14 +200,14 @@ confint.blblm <- function(object, parm = NULL, level = 0.95, ...) {
   out
 }
 
-#' @title to be filled
-#' @description to be filled
-#' @param object  to be filled
-#' @param new_data to be filled
-#' @param confidence to be filled
-#' @param level to be filled
-#' @param ... to be filled
-#' @return to be filled
+#' @title Predict method for BLB Model Fits
+#' @description Predicted values based on BLB model object.
+#' @param object  Object of class inheriting from "blblm"
+#' @param new_data A data frame in which to look for variables with which to predict.
+#' @param confidence logical, whether to show confidence interval around point prediction (Default: FALSE)
+#' @param level numeric, a number range from (0,1) as the confidence level (Default: 0.95)
+#' @param ... additional arguments to be passed.
+#' @return Point predictions for each new observation. If `confidence=TRUE`, also shows the confidence interval around the point point prediction.
 #' @method predict blblm
 #' @export
 
@@ -216,8 +216,8 @@ predict.blblm <- function(object, new_data, confidence = FALSE, level = 0.95, ..
   X <- model.matrix(reformulate(attr(terms(object$formula), "term.labels")), new_data)
   if (confidence) {
     map_mean(est, ~ map_cbind(., ~ X %*% .$coef) %>%
-      apply(1, mean_lwr_upr, level = level) %>%
-      t())
+               apply(1, mean_lwr_upr, level = level) %>%
+               t())
   } else {
     map_mean(est, ~ map_cbind(., ~ X %*% .$coef) %>% rowMeans())
   }
@@ -232,6 +232,21 @@ mean_lwr_upr <- function(x, level = 0.95) {
 map_mean <- function(.x, .f, ...) {
   (map(.x, .f, ...) %>% reduce(`+`)) / length(.x)
 }
+
+# needed for blblm.sigma()?
+# map_dbl_mean <- function(.x, .f, ...) {
+#   map_dbl(.x, .f, ...) %>% mean()
+# }
+
+# bench::mark(sigma1 = map_mean2(est, ~ map_mean2(., "sigma")),
+#             sigma = mean(map_dbl(est, ~ mean(map_dbl(., "sigma")))),
+#             iterations = 1e3 )
+# # A tibble: 2 x 13
+# expression   min median `itr/sec` mem_alloc `gc/sec` n_itr  n_gc total_time result
+# <bch:expr> <bch> <bch:>     <dbl> <bch:byt>    <dbl> <int> <dbl>   <bch:tm> <list>
+#   1 sigma1     197ms  248ms      3.88     391KB     5.51  1000  1418      4.29m <dbl ~
+#   2 sigma      202ms  275ms      3.45     391KB     4.90  1000  1418      4.83m <dbl ~
+#   # ... with 3 more variables: memory <list>, time <list>, gc <list>
 
 map_cbind <- function(.x, .f, ...) {
   map(.x, .f, ...) %>% reduce(cbind)

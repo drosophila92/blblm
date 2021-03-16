@@ -2,22 +2,22 @@
 % Please edit documentation in R/blblm.R
 \name{sigma.blblm}
 \alias{sigma.blblm}
-\title{to be filled}
+\title{BLB estimator of error term standard deviation (\eqn{\sigma})}
 \usage{
 \method{sigma}{blblm}(object, confidence = FALSE, level = 0.95, ...)
 }
 \arguments{
-\item{object}{to be filled}
+\item{object}{a blblm object returned by function \code{blblm}}
 
-\item{confidence}{to be filled}
+\item{confidence}{logical, whether to show confidence interval around the point estimate (Default: FALSE)}
 
-\item{level}{to be filled}
+\item{level}{numeric, a number range from (0,1) as the confidence level (Default: 0.95)}
 
-\item{...}{to be filled}
+\item{...}{additional arguments to be passed}
 }
 \value{
-to be filled
+A single point estimate of error term standard deviation (\eqn{\sigma}). If \code{confidence=TRUE}, also shows the confidence interval around the point estimation.
 }
 \description{
-to be filled
+Calculate the point estimation of error term standard deviation (\eqn{\sigma}), with the option to show the confidence internal by user specified confidence level.
 }

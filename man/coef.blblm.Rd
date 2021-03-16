@@ -2,18 +2,18 @@
 % Please edit documentation in R/blblm.R
 \name{coef.blblm}
 \alias{coef.blblm}
-\title{to be filled}
+\title{BLB estimator of regression coefficients (\eqn{\beta} s)}
 \usage{
 \method{coef}{blblm}(object, ...)
 }
 \arguments{
-\item{object}{to be filled}
+\item{object}{a blblm object returned by function \code{blblm}}
 
-\item{...}{to be filled}
+\item{...}{additional arguments to be passed}
 }
 \value{
-to be filled
+a dataframe of estimated regression coefficients.
 }
 \description{
-to be filled
+Calculate the point estimation of regression coefficients (\eqn{\beta} s).
 }

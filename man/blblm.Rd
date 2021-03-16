@@ -4,7 +4,14 @@
 \alias{blblm}
 \title{Linear regression with Bag of Little Bootstraps (BLB)}
 \usage{
-blblm(formula, data, m = 10L, B = 5000L, parallel = availableCores())
+blblm(
+  formula,
+  data,
+  m = 10L,
+  B = 5000L,
+  use.legacy = NA,
+  parallel = availableCores()
+)
 }
 \arguments{
 \item{formula}{an object of class \link{formula}: a symbolic description of the model to be fitted.}
@@ -14,6 +21,8 @@ blblm(formula, data, m = 10L, B = 5000L, parallel = availableCores())
 \item{m}{an integer specifying the number of chunks (Default 10) the data will be sliced into.}
 
 \item{B}{an integer specifying the number of bootstraps (Default 5000) done within each sub-sample.}
+
+\item{use.legacy}{an logical specifying whether use the legacy version of function (Default NA to use optimized one).}
 
 \item{parallel}{an integer specifying number of parallel processes (Default \code{\link[future:re-exports]{future::availableCores()}}) used. Set parallel = 1L to turn off.}
 }

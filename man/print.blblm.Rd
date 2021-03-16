@@ -2,18 +2,15 @@
 % Please edit documentation in R/blblm.R
 \name{print.blblm}
 \alias{print.blblm}
-\title{to be filled}
+\title{Print the BLB linear regression model}
 \usage{
 \method{print}{blblm}(x, ...)
 }
 \arguments{
-\item{x}{to be filled}
+\item{x}{a blblm object}
 
-\item{...}{to be filled}
-}
-\value{
-to be filled
+\item{...}{additional arguments to be passed}
 }
 \description{
-to be filled
+print out the model formula and regression coefficients of a blblm object to the console
 }
