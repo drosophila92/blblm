@@ -3,3 +3,6 @@
 ^\.Rproj\.user$
 ^LICENSE\.md$
 ^fastlm1$
+^R/problem1\.R$
+^R/problem2\.R$
+^R/problem3\.R$
