@@ -6,16 +6,10 @@
 
 # Let W be a diagonal matrix of weights
 # X_til = W^(1/2) %*% X
-# Y_til = W^(1/2) %*% Y
+# Y_til = W^(1/2) %*% Y # this can be optimized by element-wise product between vectors
 
 fastlm1 <- function(X, y, n) {
   freqs <- as.vector( rmultinom( 1, n, rep( 1, nrow(X) ) ) )
-  new_X <- diag( sqrt( freqs ) ) %*% X
-  new_y <- diag( sqrt( freqs ) ) %*% y
-
-  # fit <- lm.fit( X, y )
-   fit <- RcppArmadillo::fastLm( new_X, new_y )
-  # fit <- lm.wfit(X, y, freqs) # could improve the lm.wfit by Rcpp
-
-  list(coef = blb_coef(fit), sigma = blb_sigma(fit) )
+  fit <- fastwLm( X, y, freqs )
+  list( coef = blbcoef(fit), sigma = blbsigma(fit) )
 }
