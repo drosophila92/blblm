@@ -17,15 +17,19 @@ utils::globalVariables(c("."))
 
 
 #' @title Linear regression with Bag of Little Bootstraps (BLB)
-#' @description to be filled
+#' @description BLB is a procedure where data (containing n rows) are split into (m) subsets first. Within each subset, a bootstrapped sample is generated through random sampling of size n (instead of size m) with replacement, and a ordinary linear regression model on selected variables is fitted. The bootstrap procedure for each subset will be repeated for many (B) times. Therefore, m*B point estimates of regression parameters will be obtained, from which confidence intervals can also be estimated.
 #' @param formula an object of class [formula]: a symbolic description of the model to be fitted.
 #' @param data a data frame containing the variables in the model
 #' @param m an integer specifying the number of chunks (Default 10) the data will be sliced into.
 #' @param B an integer specifying the number of bootstraps (Default 5000) done within each sub-sample.
-#' @param use.legacy an logical specifying whether use the legacy version of function (Default NA to use optimized one).
+#' @param use.legacy an logical specifying whether use the legacy version of function (Default FALSE to use optimized one). However, it is recommended to not use parallel when the number of computations (approximated by \eqn{dim(data) x  m x B} is small (e.g. < \eqn{1e6} ).
 #' @param parallel an integer specifying number of parallel processes (Default [future::availableCores()]) used. Set parallel = 1L to turn off.
 #' @return
-#' blblm returns an object of class "blblm".
+#' blblm returns a list of class "blblm", and contains 4 elements: `estimates`, `formula`, `use.legacy` and `parallel`.
+#' estimates: a list of length m containing BLB estimates of regression parameters for each subset of data
+#' formula: the model formula.
+#' use.legacy: whether optimzed code or the original code used.
+#' parallel: the number of parallel processes used.
 #'
 #' Like object of class "lm", the generic accessor functions [coef], [confint], [sigma], [predict] extract various useful features of the value returned by `blblm`.
 #' @export
@@ -37,29 +41,28 @@ utils::globalVariables(c("."))
 
 # blb <- function( ..., method = c("lm", "rf"(too hard), "logistic"(maybe?) ) )?
 
-blblm <- function( formula, data, m = 10L, B = 5000L, use.legacy = NA, parallel = availableCores() ) {
+blblm <- function( formula, data, m = 10L, B = 5000L, use.legacy = FALSE, parallel = availableCores() ) {
   data_list <- split_data( data, m )
 
-  if( is.na( use.legacy ) )
-    use.legacy = prod( dim(data), m, B ) < 1e6
-
-
   if( !use.legacy & parallel > 1L ){
-    plan( multisession, workers = min( m , parallel, availableCores() ) ) # specify with the number of cores (devtools::check() will only use 2 cores by default)
+    workers <- min( m , parallel, availableCores() )
+    plan( multisession, workers =  workers ) # specify with the number of cores (devtools::check() will only use 2 cores by default)
     estimates <- future_map(
       data_list,
-      ~ lm_each_subsample( formula = formula, data = ., n = nrow( data ), B = B ),
+      ~ lm_each_subsample( formula = formula, data = ., n = nrow( data ), B = B, use.legacy = use.legacy ),
       .options = furrr_options( seed = TRUE )
     )
   }
 
   else{
+    workers = 1L
     estimates <- map(
       data_list,
-      ~ lm_each_subsample(formula = formula, data = ., n = nrow( data ), B = B ) )
+      ~ lm_each_subsample(formula = formula, data = ., n = nrow( data ), B = B, use.legacy = use.legacy ) )
   }
 
-  res <- list( estimates = estimates, formula = formula )
+  res <- list( estimates = estimates, formula = formula,
+               use.legacy = use.legacy, parallel = workers )
   class( res ) <- "blblm"
   invisible( res )
 

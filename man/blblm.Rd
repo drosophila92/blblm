@@ -9,7 +9,7 @@ blblm(
   data,
   m = 10L,
   B = 5000L,
-  use.legacy = NA,
+  use.legacy = FALSE,
   parallel = availableCores()
 )
 }
@@ -22,17 +22,21 @@ blblm(
 
 \item{B}{an integer specifying the number of bootstraps (Default 5000) done within each sub-sample.}
 
-\item{use.legacy}{an logical specifying whether use the legacy version of function (Default NA to use optimized one).}
+\item{use.legacy}{an logical specifying whether use the legacy version of function (Default FALSE to use optimized one). However, it is recommended to not use parallel when the number of computations (approximated by \eqn{dim(data) x  m x B} is small (e.g. < \eqn{1e6} ).}
 
 \item{parallel}{an integer specifying number of parallel processes (Default \code{\link[future:re-exports]{future::availableCores()}}) used. Set parallel = 1L to turn off.}
 }
 \value{
-blblm returns an object of class "blblm".
+blblm returns a list of class "blblm", and contains 4 elements: \code{estimates}, \code{formula}, \code{use.legacy} and \code{parallel}.
+estimates: a list of length m containing BLB estimates of regression parameters for each subset of data
+formula: the model formula.
+use.legacy: whether optimzed code or the original code used.
+parallel: the number of parallel processes used.
 
 Like object of class "lm", the generic accessor functions \link{coef}, \link{confint}, \link{sigma}, \link{predict} extract various useful features of the value returned by \code{blblm}.
 }
 \description{
-to be filled
+BLB is a procedure where data (containing n rows) are split into (m) subsets first. Within each subset, a bootstrapped sample is generated through random sampling of size n (instead of size m) with replacement, and a ordinary linear regression model on selected variables is fitted. The bootstrap procedure for each subset will be repeated for many (B) times. Therefore, m*B point estimates of regression parameters will be obtained, from which confidence intervals can also be estimated.
 }
 \examples{
 data(mtcars)
