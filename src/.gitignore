@@ -1,3 +1,9 @@
 *.o
 *.so
 *.dll
+fastwLm1.cpp
+fastwLm2.cpp
+fastwLm3.cpp
+fastwLm4.cpp
+fastwLm5.cpp
+fastwLm6.cpp

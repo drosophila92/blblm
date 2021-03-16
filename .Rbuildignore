@@ -6,3 +6,10 @@
 ^R/problem1\.R$
 ^R/problem2\.R$
 ^R/problem3\.R$
+^src/fastwLm1\.cpp$
+^src/fastwLm2\.cpp$
+^src/fastwLm3\.cpp$
+^src/fastwLm4\.cpp$
+^src/fastwLm5\.cpp$
+^src/fastwLm6\.cpp$
+^Notes_blblm\.Rmd$
