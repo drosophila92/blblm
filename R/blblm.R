@@ -137,6 +137,10 @@ blbsigma <- function(fit) {
 print.blblm <- function(x, ...) {
   cat("blblm model:", capture.output(x$formula))
   cat("\n")
+  cat("run legacy mode:", capture.output(x$use.legacy))
+  cat("\n")
+  cat("number of parallel processes:", capture.output(x$parallel))
+  cat("\n")
 }
 
 
@@ -260,4 +264,8 @@ map_cbind <- function(.x, .f, ...) {
 
 map_rbind <- function(.x, .f, ...) {
   map(.x, .f, ...) %>% reduce(rbind)
+}
+
+.onUnload <- function (libpath) {
+  library.dynam.unload("blblm", libpath)
 }
