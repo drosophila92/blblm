@@ -49,3 +49,7 @@ fastwLm <- function(X, y, w) {
   # names(fit$residuals) <- rownames(X)
   fit
 }
+
+.onUnload <- function (libpath) {
+  library.dynam.unload("blblm", libpath)
+}

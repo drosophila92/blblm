@@ -4,10 +4,9 @@
 \name{blblm-package}
 \alias{blblm-package}
 \alias{_PACKAGE}
-\title{blblm: What the Package Does (Title Case)}
+\title{blblm: Linear Regression using Bag of Little Bootstraps}
 \description{
-More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Bootstrap provides a flexible way to estimate parameters and associated uncertainty. Yet not all model parameters can be properly estimated using bootstrap. To address this, the Bag of Little Bootstraps is proposed, which first partition the original data into little bags, and perform bootstraps within those little bags. This package is an implementation of BLB on ordinary linear regression. It can fit a BLB linear model with class `blblm`, and many generic accessor functions, including print, coef, sigma, confint and predict can be used to get the estimates on parameters and their confidence intervals.
 }
 \details{
 Linear Regression with Little Bag of Bootstraps
