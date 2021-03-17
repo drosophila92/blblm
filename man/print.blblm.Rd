@@ -12,5 +12,5 @@
 \item{...}{additional arguments to be passed}
 }
 \description{
-print out the model formula and regression coefficients of a blblm object to the console
+print out the model formula of a blblm object to the console
 }

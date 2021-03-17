@@ -121,7 +121,7 @@ blbsigma <- function(fit) {
 
 
 #' @title Print the BLB linear regression model
-#' @description print out the model formula and regression coefficients of a blblm object to the console
+#' @description print out the model formula of a blblm object to the console
 #' @param x  a blblm object
 #' @param ... additional arguments to be passed
 #' @method print blblm
@@ -129,8 +129,6 @@ blbsigma <- function(fit) {
 
 print.blblm <- function(x, ...) {
   cat("blblm model:", capture.output(x$formula))
-  cat("\n")
-  cat("Coefficients:", capture.output(x$estimates))
   cat("\n")
 
 }
