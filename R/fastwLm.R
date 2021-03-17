@@ -7,7 +7,7 @@ fastwLm <- function(X, y, w) {
   #          nrow(y)==nrow(X), nrow(y)==nrow(w)  )
 
   ny <- NCOL(y)
-  zero.weights <- any( w == 0 )
+  zero.weights <- any(w == 0)
   if (zero.weights) {
     save.r <- y
     save.w <- w
@@ -17,16 +17,20 @@ fastwLm <- function(X, y, w) {
     X0 <- X[!ok, , drop = FALSE]
     X <- X[ok, , drop = FALSE]
     n <- nrow(X)
-    y0 <- if (ny > 1L)
+    y0 <- if (ny > 1L) {
       y[!ok, , drop = FALSE]
-    else y[!ok]
-    y <- if (ny > 1L)
+    } else {
+      y[!ok]
+    }
+    y <- if (ny > 1L) {
       y[ok, , drop = FALSE]
-    else y[ok]
+    } else {
+      y[ok]
+    }
   }
 
 
-  fit <- .Call('_blblm_fastwLm_impl', PACKAGE = 'blblm', X, y, w)
+  fit <- .Call("_blblm_fastwLm_impl", PACKAGE = "blblm", X, y, w)
 
   coef <- fit$coefficients
 
@@ -42,7 +46,6 @@ fastwLm <- function(X, y, w) {
   }
 
   names(fit$coefficients) <- colnames(X)
-  #names(fit$residuals) <- rownames(X)
+  # names(fit$residuals) <- rownames(X)
   fit
-
 }

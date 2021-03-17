@@ -35,57 +35,64 @@ utils::globalVariables(c("."))
 #' @export
 #' @examples
 #' data(mtcars)
-#' blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100)
+#' fit <- blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100)
+#' coef(fit)
+#' confint(fit, c("wt", "hp"))
+#' sigma(fit)
+#' sigma(fit, confidence = TRUE)
+#' predict(fit, data.frame(wt = c(2.5, 3), hp = c(150, 170)))
+#' predict(fit, data.frame(wt = c(2.5, 3), hp = c(150, 170)), confidence = TRUE)
 #' closeAllConnections() # close all connections to clean up
+#'
+#'
+#' # blb <- function( ..., method = c("lm", "rf"(too hard), "logistic"(maybe?) ) )?
+blblm <- function(formula, data, m = 10L, B = 5000L, use.legacy = FALSE, parallel = availableCores()) {
+  data_list <- split_data(data, m)
 
-
-# blb <- function( ..., method = c("lm", "rf"(too hard), "logistic"(maybe?) ) )?
-
-blblm <- function( formula, data, m = 10L, B = 5000L, use.legacy = FALSE, parallel = availableCores() ) {
-  data_list <- split_data( data, m )
-
-  if( !use.legacy & parallel > 1L ){
-    workers <- min( m , parallel, availableCores() )
-    plan( multisession, workers =  workers ) # specify with the number of cores (devtools::check() will only use 2 cores by default)
+  if (!use.legacy & parallel > 1L) {
+    workers <- min(m, parallel, availableCores())
+    plan(multisession, workers = workers) # specify with the number of cores (devtools::check() will only use 2 cores by default)
     estimates <- future_map(
       data_list,
-      ~ lm_each_subsample( formula = formula, data = ., n = nrow( data ), B = B, use.legacy = use.legacy ),
-      .options = furrr_options( seed = TRUE )
+      ~ lm_each_subsample(formula = formula, data = ., n = nrow(data), B = B, use.legacy = use.legacy),
+      .options = furrr_options(seed = TRUE)
     )
   }
 
-  else{
-    workers = 1L
+  else {
+    workers <- 1L
     estimates <- map(
       data_list,
-      ~ lm_each_subsample(formula = formula, data = ., n = nrow( data ), B = B, use.legacy = use.legacy ) )
+      ~ lm_each_subsample(formula = formula, data = ., n = nrow(data), B = B, use.legacy = use.legacy)
+    )
   }
 
-  res <- list( estimates = estimates, formula = formula,
-               use.legacy = use.legacy, parallel = workers )
-  class( res ) <- "blblm"
-  invisible( res )
-
+  res <- list(
+    estimates = estimates, formula = formula,
+    use.legacy = use.legacy, parallel = workers
+  )
+  class(res) <- "blblm"
+  invisible(res)
 }
 
 
 # split data into m parts of approximated equal sizes.
 
-split_data <- function( data, m ) {
-  idx <- sample.int( m, nrow( data ), replace = TRUE )
-  data %>% split( idx )
+split_data <- function(data, m) {
+  idx <- sample.int(m, nrow(data), replace = TRUE)
+  data %>% split(idx)
 }
 
 # compute bootstrap estimates in sub-samples.
 
-lm_each_subsample <- function( formula, data, n, B, use.legacy = FALSE ) {
+lm_each_subsample <- function(formula, data, n, B, use.legacy = FALSE) {
   # drop the original closure of formula,
   # otherwise the formula will pick a wrong variable from the global scope.
-  environment( formula ) <- environment()
-  m <- model.frame( formula, data )
-  X <- model.matrix( formula, m )
-  y <- model.response( m )
-  replicate( B, lm1( X, y, n, use.legacy = use.legacy ), simplify = FALSE )
+  environment(formula) <- environment()
+  m <- model.frame(formula, data)
+  X <- model.matrix(formula, m)
+  y <- model.response(m)
+  replicate(B, lm1(X, y, n, use.legacy = use.legacy), simplify = FALSE)
 }
 
 
@@ -93,13 +100,13 @@ lm_each_subsample <- function( formula, data, n, B, use.legacy = FALSE ) {
 
 lm1 <- function(X, y, n, use.legacy = FALSE) {
   freqs <- as.vector(rmultinom(1, n, rep(1, nrow(X))))
-  if( use.legacy )
-    fit <- lm.wfit( X, y, freqs )
-  else
-    fit <- fastwLm( X, y, freqs )
+  if (use.legacy) {
+    fit <- lm.wfit(X, y, freqs)
+  } else {
+    fit <- fastwLm(X, y, freqs)
+  }
 
-  list( coef = blbcoef(fit), sigma = blbsigma(fit) )
-
+  list(coef = blbcoef(fit), sigma = blbsigma(fit))
 }
 
 # compute the coefficients from fit
@@ -130,7 +137,6 @@ blbsigma <- function(fit) {
 print.blblm <- function(x, ...) {
   cat("blblm model:", capture.output(x$formula))
   cat("\n")
-
 }
 
 
@@ -191,7 +197,6 @@ confint.blblm <- function(object, parm = NULL, level = 0.95, ...) {
   out <- map_rbind(parm, function(p) {
     # use future map for map_mean
     map_mean(est, ~ map_dbl(., list("coef", p)) %>% quantile(c(alpha / 2, 1 - alpha / 2)))
-
   })
   # stop clusters
   if (is.vector(out)) {
@@ -217,8 +222,8 @@ predict.blblm <- function(object, new_data, confidence = FALSE, level = 0.95, ..
   X <- model.matrix(reformulate(attr(terms(object$formula), "term.labels")), new_data)
   if (confidence) {
     map_mean(est, ~ map_cbind(., ~ X %*% .$coef) %>%
-               apply(1, mean_lwr_upr, level = level) %>%
-               t())
+      apply(1, mean_lwr_upr, level = level) %>%
+      t())
   } else {
     map_mean(est, ~ map_cbind(., ~ X %*% .$coef) %>% rowMeans())
   }

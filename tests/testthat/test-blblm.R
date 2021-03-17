@@ -16,28 +16,22 @@
 # })
 
 test_that("legacy mode reproducible", {
-
   set.seed(141)
   fit1a <- blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100, use.legacy = TRUE)
   set.seed(141)
   fit1b <- blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100, use.legacy = TRUE)
-  expect_equal( fit1a, fit1b )
-
+  expect_equal(fit1a, fit1b)
 })
 
 test_that("new version reproducible", {
-
   set.seed(141)
   fit2a <- blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100)
   set.seed(141)
   fit2b <- blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100)
-  expect_equal( fit2a, fit2b )
-
+  expect_equal(fit2a, fit2b)
 })
 
 test_that("returned object is blblm", {
-
   fit1 <- blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100, use.legacy = TRUE)
-  expect_is( fit1, "blblm" )
-
+  expect_is(fit1, "blblm")
 })

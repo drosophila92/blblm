@@ -40,6 +40,15 @@ BLB is a procedure where data (containing n rows) are split into (m) subsets fir
 }
 \examples{
 data(mtcars)
-blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100)
+fit <- blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100)
+coef(fit)
+confint(fit, c("wt", "hp"))
+sigma(fit)
+sigma(fit, confidence = TRUE)
+predict(fit, data.frame(wt = c(2.5, 3), hp = c(150, 170)))
+predict(fit, data.frame(wt = c(2.5, 3), hp = c(150, 170)), confidence = TRUE)
 closeAllConnections() # close all connections to clean up
+
+
+# blb <- function( ..., method = c("lm", "rf"(too hard), "logistic"(maybe?) ) )?
 }
