@@ -1,0 +1,295 @@
+---
+title: "Introduction to blblm"
+author: Yige Luo
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to blblm}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE, message = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library("tidyverse")
+library("blblm")
+library("bench")
+set.seed(141)
+```
+Linear regression has the form
+
+$$
+\vec{y} = \vec{\beta} X + \vec{\epsilon}
+$$
+
+where regression coefficients $\vec{\beta}$ and error terms $\vec{\epsilon}$ are model parameters to be estimated.
+
+
+When you want to get point estimates on the parameters of linear models and their uncertainties:
+
++  Use the parametric assumptions
++  Use bootstrap method
+
+
+Bootstrap method is flexible, and has an advantage when parametric assumptions are strongly violated.
+
+
+When the data contains millions of rows and cannot be loaded directly into the memory, some divide-N-conquer strategy is needed, e.g. partition the data into several roughly equal subsets (some little bags). In practice this can be coupled with parallel computation inside each subset.
+
+
+However, sometimes the parameters of interest cannot be properly estimated by simple split-map-reduce strategy, such as the confidence intervals. Here comes the idea of Bag of Little Bootstraps, also known as BLB.
+
+
+For each subset data containing m rows (from original data with n rows), instead of randomly sampling with replacement m times, BLB bootstrap n times. To get the final estimate, two rounds of map-reduce strategies are done: one inside each subset, and one across all subsets.
+
+
+The blblm package makes these steps fast and easy:
+
++  Input arguments are highly similar to the `lm()` function call of the stats package, which supports formula input y ~ X.
++  Generic accessor functions such as `print()`, `coef()`, `confint()`, `sigma()` can be readily used to retrieve relevant information of model fit.
++  It uses efficient Rcpp function under the hood, so you spend less time waiting.
++  It supports parallel processes to handle big input data.
++  It has a legacy mode which uses the original R code for easy comparison on performance gain after optimization.
+
+
+This document introduces you to toolsets inside blblm, and shows you how to apply them to data frames. In addition, the document will show the performance gain by using the optimized functions.
+
+## Data: mtcars
+
+To explore the linear regression with BLB, we will use the simple dataset `mtcars`. This data contains `r nrow(mtcars)` different car models with their performance metrics, and is documented in `?mtcars`.
+
+```{r}
+dim(mtcars)
+head(mtcars,4)
+```
+Note that by default all columns are coded as `numeric`, so they can all be used as the response variable of the linear model. 
+
+## Build the blblm model
+
+Building a blblm model is simple. To illustrate, we choose `mpg` as the RV and choose `wt` and `hp` as predictors. We set `m = 3` to split the `mtcars` into 3 chunks with roughly equal size, and bootstrap 100 times (`B = 100`) within each data chunk. For more information on the usage of `blblm`, checkout its documentation by `?blblm`
+
+```{r}
+fit1a <- blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100)
+print(fit1a)
+```
+
+The output `print()` shows that the model being fitted, the run mode is not legacy (i.e. optimized) and the there are 3 parallel processes.
+
+My local machine has only 4 cpus, so the number of parallel processes cannot exceed 4. Here having requesting 1 more cpu would lead to any performance gain, and therefore `blblm()` automatically chooses 3 workers that correspond to the 3 chunks.
+
+### Structure of the output
+
+```{r}
+ls(fit1a)
+length(fit1a$estimates)
+sapply(fit1a$estimates, length)
+str(fit1a$estimates$`1`[[1]])
+```
+
+We can see that the returned value is a list of 4 elements. Matching the number of subset chunks, there are 3 sub-lists inside the list `estimate`, which stores the bootstrapped estimates on regression parameters. Each chunk has exactly 100 bootstrap estimates, matching the `B = 100`. Each bootstrap has the regression coefficient estimates `coef` and the standard error of error term estimate `sigma`.
+
+
+### Performance
+
+Since this is a small data set, we can turn off the parallel computation by specifying `parallel = 1`
+
+```{r paged.print=FALSE}
+fit1b <- blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100, parallel = 1L)
+bench::mark(parallel = blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100),
+            non_parallel = blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100, parallel = 1L), 
+            check = FALSE,
+            memory = FALSE,
+            filter_gc = FALSE, 
+            iterations = 10)
+```
+
+We see that parallel is not a good idea for small data set, as it probably takes much preparation time to build the socket clusters and communicate with the workers. As a rule of thumb, consider turn on parallel computation when $dim(data) \times B > 10^8$
+
+```{r paged.print=FALSE}
+bar <- tibble(!!!rerun(26, rnorm(1e6)) %>% set_names(letters[seq_len(length(.))]))
+res <- 
+  bench::mark(parallel = blblm(y ~ ., data = bar, m = 4, B = 100),
+              non_parallel = blblm(y ~ ., data = bar, m = 4, B = 100, parallel = 1L), 
+            check = FALSE,
+            memory = FALSE,
+            filter_gc = FALSE )
+res
+```
+
+In the example above, we can see that $dim(data) \times B  = 2.6 \times10^9 > 10^8$, and paralleling leads to less computation time.
+
+```{r effect_of_n, eval=FALSE, paged.print=FALSE}
+# Don't run
+res2 <- 
+  bench::mark(para_n4 = blblm(y ~ ., data = bar[1:1e4,], m = 4, B = 100),
+              non_para_n4 = blblm(y ~ ., data = bar[1:1e4,], m = 4, B = 100, parallel = 1L), 
+              para_n5 = blblm(y ~ ., data = bar[1:1e5,], m = 4, B = 100),
+              non_para_n5 = blblm(y ~ ., data = bar[1:1e5,], m = 4, B = 100, parallel = 1L),
+              para_n6 = blblm(y ~ ., data = bar[1:1e6,], m = 4, B = 100),
+              non_para_n6 = blblm(y ~ ., data = bar[1:1e6,], m = 4, B = 100, parallel = 1L),
+            check = FALSE,
+            memory = FALSE,
+            filter_gc = FALSE,
+            iterations = 10)
+res2
+```
+
+```
+  expression     min median `itr/sec` mem_alloc `gc/sec` n_itr  n_gc
+  <bch:expr>  <bch:> <bch:>     <dbl> <bch:byt>    <dbl> <int> <dbl>
+1 para_n4      3.17s  3.35s   0.290          NA   0.145     10     5
+2 non_para_n4  1.21s  1.36s   0.722          NA   1.73      10    24
+3 para_n5     10.01s 10.46s   0.0940         NA   0.0470    10     5
+4 non_para_n5 13.69s 14.32s   0.0699         NA   1.82      10   261
+5 para_n6      1.64m  1.81m   0.00904        NA   0.0208    10    23
+6 non_para_n6  2.61m  2.83m   0.00549        NA   0.571     10  1040
+```
+
+From this example above, three different magnitudes of number of rows ($n = 10^4, 10^5, 10^6$) were used, with the number of bootstraps being small ($B = 10^2$) and the fitted model being complex (e.g. with 26 regression coefficients).
+
+We see that the computation time increases with number of rows, all else being equal. The parallel version has a small advantage when $dim(data) \times B  = 2.6 \times10^8 > 10^8$, as expected from the rule of thumb. 
+
+
+```{r effect_of_B, eval = FALSE, paged.print=FALSE}
+# Don't run
+res3 <- 
+  bench::mark(para_B2 = blblm(y ~ ., data = bar[1:1e4,], m = 4, B = 1e2),
+              non_para_B2 = blblm(y ~ ., data = bar[1:1e4,], m = 4, B = 1e2, parallel = 1L), 
+              para_B3 = blblm(y ~ ., data = bar[1:1e4,], m = 4, B = 1e3),
+              non_para_B3 = blblm(y ~ ., data = bar[1:1e4,], m = 4, B = 1e3, parallel = 1L), 
+              para_B4 = blblm(y ~ ., data = bar[1:1e4,], m = 4, B = 1e4),
+              non_para_B4 = blblm(y ~ ., data = bar[1:1e4,], m = 4, B = 1e4, parallel = 1L), 
+            check = FALSE,
+            memory = FALSE,
+            filter_gc = FALSE,
+            iterations = 10)
+res3
+```
+
+```
+# Precomputed results
+  expression     min median `itr/sec` mem_alloc `gc/sec` n_itr  n_gc
+  <bch:expr>  <bch:> <bch:>     <dbl> <bch:byt>    <dbl> <int> <dbl>
+1 para_B2      3.71s  4.38s   0.216          NA   0.0648    10     3
+2 non_para_B2  1.32s  1.46s   0.628          NA   0.503     10     8
+3 para_B3     10.41s  11.6s   0.0855         NA   0.0256    10     3
+4 non_para_B3 13.41s 14.79s   0.0638         NA   0.485     10    76
+5 para_B4      1.08m  1.17m   0.0143         NA   0.0157    10    11
+6 non_para_B4  2.06m  2.33m   0.00722        NA   0.546     10   756
+```
+
+From this example above, three different magnitudes of B ($B = 10^2, 10^3, 10^4$) were used, with the data size being intermediate ($n = 10^4$) and the fitted model
+being complex (e.g. with 26 regression coefficients).
+
+We see that the computation time increases with number of bootstraps (`B`), all else being equal. The parallel version has a small advantage when $dim(data) \times B  = 2.6 \times10^8 > 10^8$, as expected from the rule of thumb. 
+
+Also note that the magnitudes of computation time is comparable between `res2` and `res3`. 
+
++  `para_B3` and `para_n5`, 
++  `non_para_B3` and `non_para_n5`
++  `para_B4` and `para_n6`, 
++  `non_para_B4` and `non_para_n6`
+
+suggesting that the product between dimension of data and the number of bootstraps scales very well with the computation time.
+
+
+```{r effect_of_m, eval=FALSE, paged.print=FALSE}
+res4 <- 
+  bench::mark(para_m4 = blblm(y ~ ., data = bar[1:1e4,], m = 4, B = 1e3),
+              non_para_m4 = blblm(y ~ ., data = bar[1:1e4,], m = 4, B = 1e3, parallel = 1L), 
+              para_m16 = blblm(y ~ ., data = bar[1:1e4,], m = 16, B = 1e3),
+              non_para_m16 = blblm(y ~ ., data = bar[1:1e4,], m = 16, B = 1e3, parallel = 1L), 
+              para_m64 = blblm(y ~ ., data = bar[1:1e4,], m = 64, B = 1e3),
+              non_para_m64 = blblm(y ~ ., data = bar[1:1e4,], m = 64, B = 1e3, parallel = 1L), 
+            check = FALSE,
+            memory = FALSE,
+            filter_gc = FALSE,
+            iterations = 10)
+res4
+```
+
+```
+# Precomputed results
+  expression      min median `itr/sec` mem_alloc `gc/sec` n_itr  n_gc total_time result
+  <bch:expr>   <bch:> <bch:>     <dbl> <bch:byt>    <dbl> <int> <dbl>   <bch:tm> <list>
+1 para_m4       8.18s  9.07s    0.110         NA   0.0769    10     7      1.52m <NULL>
+2 non_para_m4  11.78s 12.56s    0.0796        NA   0.589     10    74      2.09m <NULL>
+3 para_m16      7.46s  7.84s    0.124         NA   0.0496    10     4      1.34m <NULL>
+4 non_para_m16 10.74s 11.44s    0.0878        NA   0.272     10    31       1.9m <NULL>
+5 para_m64      8.73s  9.07s    0.110         NA   0.132     10    12      1.51m <NULL>
+6 non_para_m64 12.21s  13.7s    0.0741        NA   0.956     10   129      2.25m <NULL>
+```
+
+In this example above, three different magnitudes of m ($m = 4^1, 4^2, 4^3$) were used, with the data size being intermediate ($n = 10^4$), the fitted model
+being complex (e.g. with 26 regression coefficients), and an intermediate number of bootstraps ($B = 10^3$).
+
+Computation time seem to be not sensitive to varying size of m (i.e. number of chunks). With the above setting, $dim(data) \times\ B = 2.6 \times 10^8$ is greater than the rule of thumb value. The parallel solution consistently outperforms the non-parallel solution.
+
+```{r paged.print=FALSE}
+
+bench::mark(legacy = blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100, use.legacy = TRUE),
+            optimized = blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100, parallel = 1L), 
+            check = FALSE,
+            filter_gc = FALSE,
+            iterations = 1000)
+
+```
+
+The legacy mode does not allow for parallel computation, so setting `parallel = 1` allows a direct comparison to see performance gain using Rcpp optimized code. Clearly we can see that the optimized code only take about 40% less of the time, and have fewer number of gc.
+
+## Getting model estimates
+
+
+### regression coefficients
+
+```{r}
+coef(fit1a)
+
+```
+
+### confidence interval on regression coefficients
+
+```{r}
+confint(fit1a)
+```
+
+One can specify which regression coefficients to retrieve CI from by passing on a character vector containing variable names to the argument `parm`.
+
+```{r}
+confint(fit1a, c("wt", "hp"))
+
+```
+
+One can also adjust the confidence level of CI by changing the input argument `level`
+
+```{r}
+confint(fit1a, level = 0.141^0.141)
+
+```
+
+### standard deviation of error terms
+
+```{r}
+sigma(fit1a)
+```
+
+One can also check the CI for the standard deviation $\sigma$ by turning on `confidence = TRUE`, and adjust `level` to the desired confidence level.
+
+```{r}
+sigma(fit1a, confidence = TRUE)
+```
+
+### Predict outcome for new data
+
+One can pass a new data frame containing relevant variables (those used to build the model) to the argument `new_data`
+
+```{r}
+predict(fit1a, data.frame(wt = c(2.5, 3), hp = c(150, 170)))
+```
+
+Similarly, one can build the CI for the point prediction (turn on `confidence = TRUE`), and adjust the confidence level for the CI as needed (specify `level`).
+
+
